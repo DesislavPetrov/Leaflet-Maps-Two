@@ -5,8 +5,6 @@ var layerTopo;
 var layerImagery;
 var layerOutdoors;
 var markerCurrentLocation;
-// var markerMallBulgaria;
-var mallToStadiumPath;
 var ll;
 var popStadium;
 var controlZoom;
@@ -29,6 +27,7 @@ var featureGroupDrawnItems;
 var controlDraw;
 var controlStyle;
 var layerEagleNests;
+var layerRaptorNests;
 
 
 map = L.map('map', {center:[19.4, -99.2], zoom: 13, zoomControl: false, attributionControl: false});
@@ -50,51 +49,30 @@ baseLayers = {
     "Hydra": layerHydra
 };
 
-// the following four variables must be placed before overlayLayers
-
-// markerMallBulgaria = L.marker([42.663941, 23.288768], {draggable: true}).addTo(map);
-// markerMallBulgaria = L.marker([42.663941, 23.288768], {draggable: true});
-// markerMallBulgaria.bindTooltip("Mall Bulgaria");
-  
-// polygonParks = L.polygon([[[42.685516, 23.278999], [42.692147, 23.338916], [42.658874, 23.341233], [42.659443, 23.284065]], [[42.681543, 23.300232], [42.681969, 23.305125], [42.67991, 23.305468], [42.679468, 23.300371]]], {color: 'purple', fillColor: 'yellow', fillOpacity: 0.3}).addTo(map);
-polygonParks = L.polygon([[[42.685516, 23.278999], [42.692147, 23.338916], [42.658874, 23.341233], [42.659443, 23.284065]], [[42.681543, 23.300232], [42.681969, 23.305125], [42.67991, 23.305468], [42.679468, 23.300371]]], {color: 'purple', fillColor: 'yellow', fillOpacity: 0.3});
-
-// mallToStadiumPath = L.polyline([[42.663941, 23.288768], [42.665156, 23.287756], [42.678493, 23.299017], [42.686415, 23.331007], [42.681853, 23.336322], [42.684121, 23.339645]], {color: 'red'}).addTo(map);
-mallToStadiumPath = L.polyline([[42.663941, 23.288768], [42.665156, 23.287756], [42.678493, 23.299017], [42.686415, 23.331007], [42.681853, 23.336322], [42.684121, 23.339645]], {color: 'red'});
-
-// featureGroupMall = L.featureGroup([polygonParks, mallToStadiumPath]).addTo(map);
 featureGroupDrawnItems = L.featureGroup().addTo(map);
 
-layerEagleNests = L.geoJSON.ajax('data/wildlife_eagle.geojson', {pointToLayer: returnEagleMarker, filter: filterEagleNests}).addTo(map);
+// layerEagleNests = L.geoJSON.ajax('data/wildlife_eagle.geojson', {pointToLayer: returnEagleMarker, filter: filterEagleNests}).addTo(map);
+// layerEagleNests.on('data:loaded', function(){
+//     map.fitBounds(layerEagleNests.getBounds());
+// })
+
+layerEagleNests = L.geoJSON.ajax('data/wildlife_eagle.geojson', {pointToLayer: returnEagleMarker}).addTo(map);
 layerEagleNests.on('data:loaded', function(){
     map.fitBounds(layerEagleNests.getBounds());
 })
 
-// overlayLayers = {
-//     "Image Overlay": imageOverlayLayer,
-//     "Mall": markerMallBulgaria,
-//     "Path to Stadium": mallToStadiumPath,
-//     "Parks": polygonParks
-// };
+layerRaptorNests = L.geoJSON.ajax('data/wildlife_raptor.geojson', {pointToLayer: returnRaptorMarker});
+layerRaptorNests.on('data:loaded', function(){
+    layerRaptorNests.addTo(map);
+})
+
 overlayLayers = {
-    "Eagle Nest": layerEagleNests,
+    "Eagle Nests": layerEagleNests,
+    "Raptor Nests": layerRaptorNests,
     "Drawn Layers Feature Group": featureGroupDrawnItems
 };
 
 controlLayer = L.control.layers(baseLayers,  overlayLayers).addTo(map);
-
-// controlZoom = L.control.zoom({zoomInText: "In", zoomOutText: "Out", position: "topright"});
-// controlZoom.addTo(map);
-
-controlPan = L.control.pan();
-controlPan.addTo(map);
-
-controlZoomSlider = L.control.zoomslider({position: "topright"});
-controlZoomSlider.addTo(map);
-
-controlEasyButton = L.easyButton ("glyphicon-screenshot", function(){
-    map.locate();
-}).addTo(map);
 
 controlAttribute = L.control.attribution({position: "bottomleft"});
 controlAttribute.addAttribution("<a href='http://geocadder.bg/en'>geocadder</a>");
@@ -117,9 +95,6 @@ map.on('draw:created', function(e){
     featureGroupDrawnItems.addLayer(e.layer);
 });
 
-controlScale = L.control.scale({position:  "bottomleft", imperial: false});
-controlScale.addTo(map);
-
 controlMousePosition = L.control.mousePosition();
 controlMousePosition.addTo(map);
 
@@ -135,28 +110,9 @@ controlEasyButtonSidebar = L.easyButton('glyphicon-transfer', function(){
     controlSidebar.toggle();
 }).addTo(map);
 
-controlOpencageSearch = L.Control.openCageSearch({key: '1ecacf64368d4930bd6e4e6ceadba65c', limit: 10}).addTo(map);
-
-// map.on('click', function(e){
-//     if(e.originalEvent.shiftKey){
-//         alert(map.getZoom());
-//     } else {
-//         alert(e.latlng.toString());
-//     }
-// })
-
-
-popStadium = L.popup({keepInView: true})
-    .setLatLng([42.684146, 23.339908])
-    .setContent("<h2>Bulgarian Army Stadium</h2> <img src='https://www.dnevnik.bg/shimg/zx860y484_3150587.jpg' width='300px'>");
-
 map.on('contextmenu', function(e){
     L.marker(e.latlng).addTo(map).bindPopup(e.latlng.toString());
 })
-
-// map.on('contextmenu', function(e){
-//     console.log(e);
-// })
 
 map.on('keypress',function(e){
     if(e.originalEvent.key == "l"){
@@ -190,52 +146,9 @@ map.on('mousemove', function(e){
     $("#mouse-location").html(LatLngToArrayString(e.latlng));
 })
 
-// markerMallBulgaria.on('dragend', function(){
-//     markerMallBulgaria.setTooltipContent("Current Location: " + markerMallBulgaria.getLatLng().toString() + "<br> Distance to Mall Bulgaria: " + markerMallBulgaria.getLatLng().distanceTo([42.663941, 23.288768]).toFixed(0) + " m");
-// })
-
-// markerMallBulgaria.on('dragend', function(){
-//     this.setTooltipContent("Current Location: " + this.getLatLng());
-// })
-
 $("#btnLocate").click(function(){
     map.locate();
 })
-
-$("#btnStadium").click(function(){
-    map.setView([42.684146, 23.339908], 17);
-    map.openPopup(popStadium);
-})
-
-// $("#btnMall").click(function(){
-//     map.setView([42.663941, 23.288768], 17);
-//     markerMallBulgaria.setLatLng([42.663941, 23.288768]);
-//     markerMallBulgaria.setTooltipContent("Mall Bulgaria");
-// })
-
-$("#btnStadiumRoute").click(function(){
-    map.fitBounds(mallToStadiumPath.getBounds());
-})
-
-// $("#slideOpacity").on("change", function(){
-//     $("#image-opacity").html(this.value);
-//     imageOverlayLayer.setOpacity(this.value);
-// });
-
-// $("#btnColor").click(function(){
-//     featureGroupMall.setStyle({color:"orange", fillColor:"green"});
-// });
-
-
-// $("#btnAddMallMarkerToFeatGroup").click(function(){
-//     if(featureGroupMall.hasLayer(markerMallBulgaria)){
-//         featureGroupMall.removeLayer(markerMallBulgaria);
-//         $("#btnAddMallMarkerToFeatGroup").html("Add Mall to Feature Group");
-//     } else {
-//         featureGroupMall.addLayer(markerMallBulgaria);
-//         $("#btnAddMallMarkerToFeatGroup").html("Remove Mall from Feature Group");
-//     }    
-// });
 
 function LatLngToArrayString(ll){
     return "[" + ll.lat.toFixed(5) + ", "  + ll.lng.toFixed(5) + "]";
@@ -246,17 +159,43 @@ function returnEagleMarker(geoJsonPoint, latlng){
     if(attribute.status == 'ACTIVE NEST'){
         var colorNest = 'deeppink';
     } else {
-        var colorNest = 'lightblue';
+        var colorNest = 'blue';
     }
     return L.circleMarker(latlng, {radius: 10, color:colorNest}).bindTooltip("<h4>Eagle Nest: " + attribute.nest_id + "<h4> Status: "  + attribute.status);
 }
 
-function filterEagleNests (geoJsonFeature){
-    var attribute = geoJsonFeature.properties;
-    if(attribute.status == 'ACTIVE NEST'){
-        return true;
-    } else {
-        return false;
+function returnRaptorMarker(geoJsonPoint, latlng){
+    var attribute = geoJsonPoint.properties;
+    switch(attribute.recentstatus){
+        case 'ACTIVE NEST':
+            var optionRaptor = {radius: 10, color:'deeppink', fillColor: 'blue', fillOpacity: 0.5};
+            break;
+        case 'INACTIVE NEST':
+            var optionRaptor = {radius: 10, color:'blue', fillColor: 'blue', fillOpacity: 0.5};
+            break;
+        case 'FLEDGED NEST':
+            var optionRaptor = {radius: 10, color:'blue', fillColor: 'blue', fillOpacity: 0.5, dashArray: "2,8"};
+            break;
     }
+    return L.circleMarker(latlng, optionRaptor).bindPopup("<h4>Raptor Nest: " + attribute.Nest_ID + "<h4> Status: "  + attribute.recentstatus + "<br>Species:  " + attribute.recentspecies + "Last Survey: " + attribute.lastsurvey);
 }
+
+// function returnRaptorMarker(geoJsonPoint, latlng){
+//     var attribute = geoJsonPoint.properties;
+    // if(attribute.status == 'ACTIVE NEST'){
+    //     var colorNest = 'deeppink';
+    // } else {
+    //     var colorNest = 'lightgreen';
+    // }
+    // return L.circleMarker(latlng, {radius: 10, color:colorNest, fillColor: 'green', fillOpacity: 0.5}).bindTooltip("<h4>Eagle Nest: " + attribute.nest_id + "<h4> Status: "  + attribute.status);
+// }
+
+// function filterEagleNests (geoJsonFeature){
+//     var attribute = geoJsonFeature.properties;
+//     if(attribute.status == 'ACTIVE NEST'){
+//         return true;
+//     } else {
+//         return false;
+//     }
+// }
 
