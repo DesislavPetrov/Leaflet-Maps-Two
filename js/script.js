@@ -58,7 +58,45 @@ var layerGreatBlueHeron;
 // iconEagleActive = L.icon({iconUrl:'../img/nest2.png', iconSize:[40,40], iconAnchor:[20,24]});
 // iconEagleInactive = L.icon({iconUrl:'../img/nest.png', iconSize:[40,40], iconAnchor:[20,24]});
 
-map = L.map('map', {center:[19.4, -99.2], zoom: 13, zoomControl: false, attributionControl: false});
+
+
+
+
+
+
+// *************** Map Initialization *************/
+
+map = L.map('map', {center:[40.18, -104.83], zoom: 11, attributionControl: false});
+
+controlSidebar = L.control.sidebar('sidebar', {
+    position: 'left'
+});
+controlSidebar.addTo(map);
+
+controlEasyButtonSidebar = L.easyButton('glyphicon-transfer', function(){
+    controlSidebar.toggle();
+}).addTo(map);
+
+controlAttribute = L.control.attribution({position: "bottomleft"});
+controlAttribute.addAttribution("<a href='http://geocadder.bg/en'>geocadder</a>");
+controlAttribute.addTo(map);
+
+controlMousePosition = L.control.mousePosition();
+controlMousePosition.addTo(map);
+
+controlScale = L.control.scale({position:  "bottomleft", imperial: false});
+controlScale.addTo(map);
+
+controlStyle = L.control.styleEditor({position: 'topright'}).addTo(map);
+
+controlPolylineMeasure = L.control.polylineMeasure();
+controlPolylineMeasure.addTo(map);
+// ****************************************************
+
+
+
+
+// ************* Layer Initialization *************/
 
 // layerOSM = L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png');
 layerOSM = L.tileLayer.provider('OpenStreetMap.Mapnik');
@@ -66,16 +104,9 @@ layerWatercolor = L.tileLayer.provider('Stamen.Watercolor');
 layerTopo = L.tileLayer.provider('OpenTopoMap');
 layerImagery = L.tileLayer.provider('Esri.WorldImagery');
 layerHydra = L.tileLayer.provider('Hydda.Full');
-
 map.addLayer(layerOSM);
+// *****************************************************
 
-baseLayers = {
-    "Open Street Maps": layerOSM,
-    "Watercolor": layerWatercolor,
-    "Topo Map": layerTopo,
-    "Imagery": layerImagery,
-    "Hydra": layerHydra
-};
 
 featureGroupDrawnItems = L.featureGroup().addTo(map);
 
@@ -114,6 +145,16 @@ layerGreatBlueHeron = L.geoJSON.ajax('data/wildlife_gbh.geojson', {style: {color
 //     "Drawn Layers Feature Group": featureGroupDrawnItems
 // };
 
+// *************** Setup Layer Control ****************
+
+baseLayers = {
+    "Open Street Maps": layerOSM,
+    "Watercolor": layerWatercolor,
+    "Topo Map": layerTopo,
+    "Imagery": layerImagery,
+    "Hydra": layerHydra
+};
+
 overlayLayers = {
     "Client Linears": layerClientLines,
     "Burrowing Owl": layerBurrowingOwl,
@@ -124,12 +165,10 @@ overlayLayers = {
 };
 
 controlLayer = L.control.layers(baseLayers,  overlayLayers).addTo(map);
+// ****************************************************
 
-controlAttribute = L.control.attribution({position: "bottomleft"});
-controlAttribute.addAttribution("<a href='http://geocadder.bg/en'>geocadder</a>");
-controlAttribute.addTo(map);
 
-controlStyle = L.control.styleEditor({position: 'topright'}).addTo(map);
+// *********** Setup Draw Control *************
 
 controlDraw = new L.Control.Draw({
     draw: {
@@ -145,31 +184,26 @@ map.on('draw:created', function(e){
     console.log(e);
     featureGroupDrawnItems.addLayer(e.layer);
 });
+// **********************************************
 
-controlMousePosition = L.control.mousePosition();
-controlMousePosition.addTo(map);
 
-controlPolylineMeasure = L.control.polylineMeasure();
-controlPolylineMeasure.addTo(map);
 
-controlSidebar = L.control.sidebar('sidebar', {
-    position: 'left'
-});
-controlSidebar.addTo(map);
 
-controlEasyButtonSidebar = L.easyButton('glyphicon-transfer', function(){
-    controlSidebar.toggle();
-}).addTo(map);
 
-map.on('contextmenu', function(e){
-    L.marker(e.latlng).addTo(map).bindPopup(e.latlng.toString());
-})
 
-map.on('keypress',function(e){
-    if(e.originalEvent.key == "l"){
-        map.locate();
-    }
-})
+// map.on('contextmenu', function(e){
+//     L.marker(e.latlng).addTo(map).bindPopup(e.latlng.toString());
+// })
+
+// map.on('keypress',function(e){
+//     if(e.originalEvent.key == "l"){
+//         map.locate();
+//     }
+// })
+
+
+
+// ********* Location Events **********
 
 map.on('locationfound', function(e){
     console.log(e);
@@ -184,26 +218,39 @@ map.on('locationerror', function(e){
     console.log(e);
     alert("Location  was not found");
 })
+// ***************************************
 
-map.on('zoomend', function(){
-    $("#zoom-level").html(map.getZoom());
-})
 
-map.on('moveend', function(){
-    $("#map-center").html(LatLngToArrayString(map.getCenter()));    
-})
 
-map.on('mousemove', function(e){
-    $("#mouse-location").html(LatLngToArrayString(e.latlng));
-})
+
+
+
+// map.on('zoomend', function(){
+//     $("#zoom-level").html(map.getZoom());
+// })
+
+// map.on('moveend', function(){
+//     $("#map-center").html(LatLngToArrayString(map.getCenter()));    
+// })
+
+// map.on('mousemove', function(e){
+//     $("#mouse-location").html(LatLngToArrayString(e.latlng));
+// })
+
+
+
+
+
+// ************ jQuery Event Handlers ************
 
 $("#btnLocate").click(function(){
     map.locate();
 })
+// ****************************************************
 
-function LatLngToArrayString(ll){
-    return "[" + ll.lat.toFixed(5) + ", "  + ll.lng.toFixed(5) + "]";
-}
+
+
+// **************** Eagle Functions **************
 
 function returnEagleMarker(geoJsonPoint, latlng){
     var attribute = geoJsonPoint.properties;
@@ -254,6 +301,13 @@ function returnEagleMarker(geoJsonPoint, latlng){
 //     }
 //     return L.marker(latlng, {icon: iconEagle}).bindTooltip("<h4>Eagle Nest: " + attribute.nest_id + "<h4>");
 // }
+// *************************************************************
+
+
+
+
+
+// ************ Raptor Functions *************
 
 function returnRaptorMarker(geoJsonPoint, latlng){
     var attribute = geoJsonPoint.properties;
@@ -300,7 +354,10 @@ function returnRaptorMarker(geoJsonPoint, latlng){
 //         return false;
 //     }
 // }
+// ******************************************************
 
+
+// ************* Client Linears Functions ***************
 function styleClientLinears(geoJsonFeature){
     var attribute = geoJsonFeature.properties;
     switch(attribute.type){
@@ -335,6 +392,11 @@ function processClientLinears (feature, layer){
     var attribute = feature.properties;
     layer.bindTooltip("<h4>Linear Project: " + attribute.Project + "</h4></h4>Type: " + attribute.type + "</h4><br>Row width: " + attribute.row_width);
 }
+// **********************************************************
+
+
+
+// ************** Burrowing Owl Functions *************
 
 function styleBurrowingOwl(geoJsonFeature){
     var attribute = geoJsonFeature.properties;
@@ -362,3 +424,9 @@ function filterBurrowingOwl (geoJsonFeature){
     }
 }
 
+
+
+// ************ General Functions *******************
+function LatLngToArrayString(ll){
+    return "[" + ll.lat.toFixed(5) + ", "  + ll.lng.toFixed(5) + "]";
+}
