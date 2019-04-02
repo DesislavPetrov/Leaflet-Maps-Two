@@ -28,7 +28,21 @@ var controlDraw;
 var controlStyle;
 var layerEagleNests;
 var layerRaptorNests;
+var iconRedSprite;
+var iconVioletSprite;
+var iconLeafletAwesomeMarkerTree;
+var iconLeafletAwesomeMarkerBird;
+var iconMapKeyTree;
+var iconMapKeyBird;
 
+iconRedSprite = L.spriteIcon('red');
+iconVioletSprite = L.spriteIcon('violet');
+
+iconLeafletAwesomeMarkerTree = L.AwesomeMarkers.icon({icon: 'tree-conifer', markerColor: 'green'});
+iconLeafletAwesomeMarkerBird = L.AwesomeMarkers.icon({icon: 'twitter', markerColor: 'green', iconColor: 'red', spin: true,prefix: 'fa'});
+
+iconMapKeyBird = L.icon.mapkey({icon:"school",color:'#725139',background:'#f2c357',size:30});
+iconMapKeyTree = L.icon.mapkey({icon:"tree_cinofer",color:'#725139',background:'#f2c357',size:30, borderRadius: 5});
 
 map = L.map('map', {center:[19.4, -99.2], zoom: 13, zoomControl: false, attributionControl: false});
 
@@ -156,28 +170,69 @@ function LatLngToArrayString(ll){
 
 function returnEagleMarker(geoJsonPoint, latlng){
     var attribute = geoJsonPoint.properties;
+    // if(attribute.status == 'ACTIVE NEST'){
+    //     var colorNest = 'deeppink';
+    // } else {
+    //     var colorNest = 'green';
+    // }
+    // return L.circle(latlng, {radius: 804, color:colorNest}).bindTooltip("<h4>Eagle Nest: " + attribute.nest_id + "<h4> Status: "  + attribute.status);
+}
+
+// function returnEagleMarker(geoJsonPoint, latlng){
+//     var attribute = geoJsonPoint.properties;
+//     if(attribute.status == 'ACTIVE NEST'){
+//         var iconEagle = iconRedSprite;
+//     } else {
+//         var iconEagle = iconVioletSprite;
+//     }
+//     return L.marker(latlng, {icon: iconEagle});
+// }
+
+// function returnEagleMarker(geoJsonPoint, latlng){
+//     var attribute = geoJsonPoint.properties;
+//     if(attribute.status == 'ACTIVE NEST'){
+//         var iconEagle = iconLeafletAwesomeMarkerBird;
+//     } else {
+//         var iconEagle = iconLeafletAwesomeMarkerTree;
+//     }
+//     return L.marker(latlng, {icon: iconEagle});
+// }
+
+function returnEagleMarker(geoJsonPoint, latlng){
+    var attribute = geoJsonPoint.properties;
     if(attribute.status == 'ACTIVE NEST'){
-        var colorNest = 'deeppink';
+        var iconEagle = iconMapKeyBird;
     } else {
-        var colorNest = 'blue';
+        var iconEagle = iconMapKeyTree;
     }
-    return L.circleMarker(latlng, {radius: 10, color:colorNest}).bindTooltip("<h4>Eagle Nest: " + attribute.nest_id + "<h4> Status: "  + attribute.status);
+    return L.marker(latlng, {icon: iconEagle});
 }
 
 function returnRaptorMarker(geoJsonPoint, latlng){
     var attribute = geoJsonPoint.properties;
-    switch(attribute.recentstatus){
-        case 'ACTIVE NEST':
-            var optionRaptor = {radius: 10, color:'deeppink', fillColor: 'blue', fillOpacity: 0.5};
+    switch(attribute.recentspecies){
+        case 'Red-tail Hawk':
+            var radiusRaptor = 533;
             break;
-        case 'INACTIVE NEST':
-            var optionRaptor = {radius: 10, color:'blue', fillColor: 'blue', fillOpacity: 0.5};
+        case 'Swainsons Hawk': 
+            var radiusRaptor = 400;
             break;
-        case 'FLEDGED NEST':
-            var optionRaptor = {radius: 10, color:'blue', fillColor: 'blue', fillOpacity: 0.5, dashArray: "2,8"};
+        default: 
+            var radiusRaptor = 804;
             break;
     }
-    return L.circleMarker(latlng, optionRaptor).bindPopup("<h4>Raptor Nest: " + attribute.Nest_ID + "<h4> Status: "  + attribute.recentstatus + "<br>Species:  " + attribute.recentspecies + "Last Survey: " + attribute.lastsurvey);
+    switch(attribute.recentstatus){
+        case 'ACTIVE NEST':
+            var optionRaptor = {radius: radiusRaptor, color:'deeppink', fillColor: 'blue', fillOpacity: 0.5};
+            break;
+        case 'INACTIVE NEST':
+            var optionRaptor = {radius: radiusRaptor, color:'blue', fillColor: 'blue', fillOpacity: 0.5};
+            break;
+        case 'FLEDGED NEST':
+            var optionRaptor = {radius: radiusRaptor, color:'deeppink', fillColor: 'blue', fillOpacity: 0.5, dashArray: "2,8"};
+            break;
+    }
+    return L.circle(latlng, optionRaptor).bindPopup("<h4>Raptor Nest: " + attribute.Nest_ID + "<h4> Status: "  + attribute.recentstatus + "<br>Species:  " + attribute.recentspecies + "<br>Last Survey: " + attribute.lastsurvey);
 }
 
 // function returnRaptorMarker(geoJsonPoint, latlng){
