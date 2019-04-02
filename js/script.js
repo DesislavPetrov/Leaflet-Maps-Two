@@ -5,6 +5,7 @@ var layerTopo;
 var layerImagery;
 var layerOutdoors;
 var markerCurrentLocation;
+var markerClusterLayer;
 var ll;
 var popStadium;
 var controlZoom;
@@ -28,21 +29,34 @@ var controlDraw;
 var controlStyle;
 var layerEagleNests;
 var layerRaptorNests;
-var iconRedSprite;
-var iconVioletSprite;
-var iconLeafletAwesomeMarkerTree;
-var iconLeafletAwesomeMarkerBird;
-var iconMapKeyTree;
-var iconMapKeyBird;
+var layerClientLines;
+var layerBurrowingOwl;
+var layerGreatBlueHeron;
+// var iconRedSprite;
+// var iconVioletSprite;
+// var iconLeafletAwesomeMarkerTree;
+// var iconLeafletAwesomeMarkerBird;
+// var iconMapKeyTree;
+// var iconMapKeyBird;
+// var iconEagleActive;
+// var iconEagleInactive;
 
-iconRedSprite = L.spriteIcon('red');
-iconVioletSprite = L.spriteIcon('violet');
+// iconRedSprite = L.spriteIcon('red');
+// iconVioletSprite = L.spriteIcon('violet');
 
-iconLeafletAwesomeMarkerTree = L.AwesomeMarkers.icon({icon: 'tree-conifer', markerColor: 'green'});
-iconLeafletAwesomeMarkerBird = L.AwesomeMarkers.icon({icon: 'twitter', markerColor: 'green', iconColor: 'red', spin: true,prefix: 'fa'});
+// iconLeafletAwesomeMarkerTree = L.AwesomeMarkers.icon({icon: 'tree-conifer', markerColor: 'green'});
+// iconLeafletAwesomeMarkerBird = L.AwesomeMarkers.icon({icon: 'twitter', markerColor: 'green', iconColor: 'red', spin: true,prefix: 'fa'});
 
-iconMapKeyBird = L.icon.mapkey({icon:"school",color:'#725139',background:'#f2c357',size:30});
-iconMapKeyTree = L.icon.mapkey({icon:"tree_cinofer",color:'#725139',background:'#f2c357',size:30, borderRadius: 5});
+// iconMapKeyBird = L.icon.mapkey({icon:"school",color:'#725139',background:'#f2c357',size:30});
+// iconMapKeyTree = L.icon.mapkey({icon:"tree_cinofer",color:'#725139',background:'#f2c357',size:30, borderRadius: 5});
+
+// iconEagleActive = L.icon({iconUrl: 'nest.png', iconSize: [30, 30],
+// iconAnchor: [10, 20]});
+// iconEagleInactive = L.icon({iconUrl: 'nest2.png', iconSize: [30, 30],
+// iconAnchor: [10, 20]});
+
+// iconEagleActive = L.icon({iconUrl:'../img/nest2.png', iconSize:[40,40], iconAnchor:[20,24]});
+// iconEagleInactive = L.icon({iconUrl:'../img/nest.png', iconSize:[40,40], iconAnchor:[20,24]});
 
 map = L.map('map', {center:[19.4, -99.2], zoom: 13, zoomControl: false, attributionControl: false});
 
@@ -75,14 +89,37 @@ layerEagleNests.on('data:loaded', function(){
     map.fitBounds(layerEagleNests.getBounds());
 })
 
+markerClusterLayer = L.markerClusterGroup({});
+
+// layerRaptorNests = L.geoJSON.ajax('data/wildlife_raptor.geojson', {pointToLayer: returnRaptorMarker});
+// layerRaptorNests.on('data:loaded', function(){
+//     layerRaptorNests.addTo(map);
+// })
+
 layerRaptorNests = L.geoJSON.ajax('data/wildlife_raptor.geojson', {pointToLayer: returnRaptorMarker});
 layerRaptorNests.on('data:loaded', function(){
-    layerRaptorNests.addTo(map);
+    markerClusterLayer.addLayer(layerRaptorNests);
+    markerClusterLayer.addTo(map);
 })
 
+layerClientLines = L.geoJSON.ajax('data/client_lines.geojson', {style: styleClientLinears, onEachFeature: processClientLinears}).addTo(map);
+
+layerBurrowingOwl = L.geoJSON.ajax('data/wildlife_buowl.geojson', {style: styleBurrowingOwl, onEachFeature: processBurrowingOwl, filter: filterBurrowingOwl}).addTo(map);
+
+layerGreatBlueHeron = L.geoJSON.ajax('data/wildlife_gbh.geojson', {style: {color: 'fuchsia'}}).bindTooltip("GBH Nesting Area").addTo(map);
+
+// overlayLayers = {
+//     "Eagle Nests": layerEagleNests,
+//     "Raptor Nests": layerRaptorNests,
+//     "Drawn Layers Feature Group": featureGroupDrawnItems
+// };
+
 overlayLayers = {
+    "Client Linears": layerClientLines,
+    "Burrowing Owl": layerBurrowingOwl,
     "Eagle Nests": layerEagleNests,
-    "Raptor Nests": layerRaptorNests,
+    "Raptor Nests": markerClusterLayer,
+    "Great Blue Heron Rookeries": layerGreatBlueHeron,
     "Drawn Layers Feature Group": featureGroupDrawnItems
 };
 
@@ -170,12 +207,12 @@ function LatLngToArrayString(ll){
 
 function returnEagleMarker(geoJsonPoint, latlng){
     var attribute = geoJsonPoint.properties;
-    // if(attribute.status == 'ACTIVE NEST'){
-    //     var colorNest = 'deeppink';
-    // } else {
-    //     var colorNest = 'green';
-    // }
-    // return L.circle(latlng, {radius: 804, color:colorNest}).bindTooltip("<h4>Eagle Nest: " + attribute.nest_id + "<h4> Status: "  + attribute.status);
+    if(attribute.status == 'ACTIVE NEST'){
+        var colorNest = 'deeppink';
+    } else {
+        var colorNest = 'green';
+    }
+    return L.circle(latlng, {radius: 804, color:colorNest}).bindTooltip("<h4>Eagle Nest: " + attribute.nest_id + "<h4> Status: "  + attribute.status);
 }
 
 // function returnEagleMarker(geoJsonPoint, latlng){
@@ -198,15 +235,25 @@ function returnEagleMarker(geoJsonPoint, latlng){
 //     return L.marker(latlng, {icon: iconEagle});
 // }
 
-function returnEagleMarker(geoJsonPoint, latlng){
-    var attribute = geoJsonPoint.properties;
-    if(attribute.status == 'ACTIVE NEST'){
-        var iconEagle = iconMapKeyBird;
-    } else {
-        var iconEagle = iconMapKeyTree;
-    }
-    return L.marker(latlng, {icon: iconEagle});
-}
+// function returnEagleMarker(geoJsonPoint, latlng){
+//     var attribute = geoJsonPoint.properties;
+//     if(attribute.status == 'ACTIVE NEST'){
+//         var iconEagle = iconMapKeyBird;
+//     } else {
+//         var iconEagle = iconMapKeyTree;
+//     }
+//     return L.marker(latlng, {icon: iconEagle}).bindTooltip("<h4>Eagle Nest: " + attribute.nest_id + "<h4>");
+// }
+
+// function returnEagleMarker(geoJsonPoint, latlng){
+//     var attribute = geoJsonPoint.properties;
+//     if(attribute.status == 'ACTIVE NEST'){
+//         var iconEagle = iconEagleActive;
+//     } else {
+//         var iconEagle = iconEagleInactive;
+//     }
+//     return L.marker(latlng, {icon: iconEagle}).bindTooltip("<h4>Eagle Nest: " + attribute.nest_id + "<h4>");
+// }
 
 function returnRaptorMarker(geoJsonPoint, latlng){
     var attribute = geoJsonPoint.properties;
@@ -253,4 +300,65 @@ function returnRaptorMarker(geoJsonPoint, latlng){
 //         return false;
 //     }
 // }
+
+function styleClientLinears(geoJsonFeature){
+    var attribute = geoJsonFeature.properties;
+    switch(attribute.type){
+        case 'Pipeline': 
+            return {color: 'peru'};
+            break;
+        case 'Flowline': 
+            return {color: 'navy'};
+            break;
+        case 'Flowline, est.': 
+            return {color: 'navy', dashArray: "5,5"};
+            break;
+        case 'Electric Line': 
+            return {color: 'darkgreen'};
+            break;
+        case 'Access Road - Confirmed': 
+            return {color: 'darkred'};
+            break;
+        case 'Access Road - Estimated': 
+            return {color: 'darkred', dashArray: "5,5"};
+            break;
+        case 'Extraction': 
+            return {color: 'indigo'};
+            break;
+        default:
+            return {color: 'darkgoldenred'};
+            break;
+    }
+}
+
+function processClientLinears (feature, layer){
+    var attribute = feature.properties;
+    layer.bindTooltip("<h4>Linear Project: " + attribute.Project + "</h4></h4>Type: " + attribute.type + "</h4><br>Row width: " + attribute.row_width);
+}
+
+function styleBurrowingOwl(geoJsonFeature){
+    var attribute = geoJsonFeature.properties;
+    switch(attribute.hist_occup){
+        case 'Yes': 
+            return {color: 'deeppink', fillColor: 'yellow'};
+            break;
+        case 'Undetermined': 
+            return {color: 'yellow'};
+            break;
+    }
+}
+
+function processBurrowingOwl (feature, layer){
+    var attribute = feature.properties;
+    layer.bindTooltip("<h4>Habitat ID: " + attribute.habitat_id + "</h4></h4>Historically Occupied: " + attribute.hist_occup + "</h4><br>Status: " + attribute.recentstatus);
+}
+
+function filterBurrowingOwl (geoJsonFeature){
+    var attribute = geoJsonFeature.properties;
+    if(attribute.recentstatus == 'REMOVED'){
+        return false;
+    } else {
+        return true;
+    }
+}
 
