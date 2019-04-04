@@ -20,6 +20,7 @@ body{
 .errorMessage{
     padding: 0;
     text-align: center;
-    background-color: red;
+    color: rgba(238, 14, 14, 0.801);
+    background-color: #29292638;
 }
 

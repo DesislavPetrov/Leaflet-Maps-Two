@@ -32,6 +32,7 @@ var layerRaptorNests;
 var layerClientLines;
 var layerBurrowingOwl;
 var layerGreatBlueHeron;
+var layerSearch;
 // var iconRedSprite;
 // var iconVioletSprite;
 // var iconLeafletAwesomeMarkerTree;
@@ -392,6 +393,33 @@ function processClientLinears (feature, layer){
     var attribute = feature.properties;
     layer.bindTooltip("<h4>Linear Project: " + attribute.Project + "</h4></h4>Type: " + attribute.type + "</h4><br>Row width: " + attribute.row_width);
 }
+
+function returnClientLinearById (id){
+    var layersArray= layerClientLines.getLayers();
+    for  (i=0; i<layersArray.length - 1; i++){
+        var featureId = layersArray[i].feature.properties.Project;
+        if (featureId == id){
+            return layersArray[i];
+        }
+    }
+    return false;
+}
+
+$("#btnFindProject").click(function(){
+    var id = $("#textFindProject").val();
+    var layer = returnClientLinearById(id);
+    if(layer){
+        if(layerSearch){
+            layerSearch.remove();
+        }
+        layerSearch = L.geoJSON(layer.toGeoJSON(), {style: {color: 'red', weight: 10, opacity: 0.5}}).addTo(map);
+        map.fitBounds(layer.getBounds().pad(1));
+        var attribute = layer.feature.properties;
+        $("#divProjectData").html("<h4 class='text-center'>Attributes</h4> <h5>Type: " + attribute.type + "</h5><h5>Row width: " + attribute.row_width + "m </h5>");
+    } else {
+        $("#divProjectError").html("*** ProjectID not found ***");
+    }
+})
 // **********************************************************
 
 
