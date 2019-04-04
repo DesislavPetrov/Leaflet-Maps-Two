@@ -84,10 +84,26 @@
 <body>
     <div class="row">
         <div id="sidebar" class="col-md-3">
-            <button id="btnLocate" class="btn btn-danger btn-block">Locate</button>
-            <h4>Zoom Level: <span id="zoom-level"></span></h4>
-            <h4>Map Center: <span id="map-center"></span></h4>
-            <h4>Mouse Location: <span id="mouse-location"></span></h4>
+            <button id="btnLocate" class="btn btn-danger btn-block">Locate</button><br>
+            <div id="divProject" class="col-xs-12">
+                <div id="divProjectLabel" class="text-center col-xs-12">
+                    <h4>Linear Projects</h4>
+                </div>
+                <div id="divProjectError" class="errorMessage col-xs-12">
+
+                </div>
+                <div id="divFindProject" class="form-group">
+                    <div class="col-xs-6">
+                        <input type="text" id="textFindProject" class="form-control" placeholder="Project ID">
+                    </div>
+                    <div class="col-xs-6"> 
+                        <button id="btnFindProject" class="btn btn-danger btn-block">Find Project</button>
+                    </div>               
+                </div>
+                <div id="divProjectData" class="">
+
+                </div>
+            </div>
         </div>
         <div id="map" class="col-md-12"></div>
     </div>

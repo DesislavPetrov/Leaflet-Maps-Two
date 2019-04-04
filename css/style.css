@@ -8,3 +8,18 @@ body{
     height: 98vh;
     margin-left: 20px;
 }
+
+.col-xs-12, .col-xs-6, .col-xs-4{
+    padding: 3px;
+}
+
+#divProject{
+    background-color: #f0f5f5;
+}
+
+.errorMessage{
+    padding: 0;
+    text-align: center;
+    background-color: red;
+}
+
