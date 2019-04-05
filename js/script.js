@@ -33,6 +33,7 @@ var layerClientLines;
 var layerBurrowingOwl;
 var layerGreatBlueHeron;
 var layerSearch;
+var arrayProjectIds = [];
 // var iconRedSprite;
 // var iconVioletSprite;
 // var iconLeafletAwesomeMarkerTree;
@@ -135,6 +136,14 @@ layerRaptorNests.on('data:loaded', function(){
 })
 
 layerClientLines = L.geoJSON.ajax('data/client_lines.geojson', {style: styleClientLinears, onEachFeature: processClientLinears}).addTo(map);
+layerClientLines.on('data:loaded', function(){
+    arrayProjectIds.sort(function(a, b){
+        return a-b;
+    });
+    $("#textFindProject").autocomplete({
+        source: arrayProjectIds
+    })
+});
 
 layerBurrowingOwl = L.geoJSON.ajax('data/wildlife_buowl.geojson', {style: styleBurrowingOwl, onEachFeature: processBurrowingOwl, filter: filterBurrowingOwl}).addTo(map);
 
@@ -186,9 +195,6 @@ map.on('draw:created', function(e){
     featureGroupDrawnItems.addLayer(e.layer);
 });
 // **********************************************
-
-
-
 
 
 
@@ -392,6 +398,7 @@ function styleClientLinears(geoJsonFeature){
 function processClientLinears (feature, layer){
     var attribute = feature.properties;
     layer.bindTooltip("<h4>Linear Project: " + attribute.Project + "</h4></h4>Type: " + attribute.type + "</h4><br>Row width: " + attribute.row_width);
+    arrayProjectIds.push(attribute.Project.toString());
 }
 
 function returnClientLinearById (id){
@@ -405,6 +412,24 @@ function returnClientLinearById (id){
     return false;
 }
 
+function testClientLineId(id){
+    if(arrayProjectIds.indexOf(id) < 0){
+        $("#divFindProject").addClass("has-error");
+        $("#divProjectError").html("*** PROJECT NOT FOUND ***");
+        $("#btnFindProject").attr("disabled", true);
+    } else {
+        $("#divFindProject").removeClass("has-error");
+        $("#divProjectError").html("");
+        $("#btnFindProject").attr("disabled", false);
+    }
+}
+
+$("#textFindProject").on('keyup paste', function(){
+    var id = $("#textFindProject").val();
+    testClientLineId(id);
+
+})
+
 $("#btnFindProject").click(function(){
     var id = $("#textFindProject").val();
     var layer = returnClientLinearById(id);
@@ -417,7 +442,7 @@ $("#btnFindProject").click(function(){
         var attribute = layer.feature.properties;
         $("#divProjectData").html("<h4 class='text-center'>Attributes</h4> <h5>Type: " + attribute.type + "</h5><h5>Row width: " + attribute.row_width + "m </h5>");
     } else {
-        $("#divProjectError").html("*** ProjectID not found ***");
+        $("#divProjectError").html("*** Project ID not found ***");
     }
 })
 // **********************************************************

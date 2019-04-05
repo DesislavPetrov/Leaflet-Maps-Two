@@ -7,6 +7,7 @@
     <title>Leaflet Map</title>
     <link rel="stylesheet" href="src/leaflet/leaflet.css">
     <link rel="stylesheet" href="src/bootstrap/css/bootstrap.css">
+    <link rel="stylesheet" href="src/jqueryUI/jquery-ui.min.css">
     <link rel="stylesheet" href="src/Leaflet.Pancontrol-master/L.Control.Pan.css">
     <link rel="stylesheet" href="src/Leaflet.zoomslider/L.Control.Zoomslider.css">
     <link rel="stylesheet" href="src/Leaflet.MousePosition-master/L.Control.MousePosition.css">
@@ -24,6 +25,7 @@
 
     <script src="src/leaflet/leaflet-src.js"></script>
     <script src="src/jquery/jquery-3.3.1.min.js"></script>
+    <script src="src/jqueryUI/jquery-ui.min.js"></script>
     <script src="src/Leaflet.Pancontrol-master/L.Control.Pan.js"></script>
     <script src="src/Leaflet.zoomslider/L.Control.Zoomslider.js"></script>
     <script src="src/Leaflet.MousePosition-master/L.Control.MousePosition.js"></script>
@@ -92,12 +94,12 @@
                 <div id="divProjectError" class="errorMessage col-xs-12">
 
                 </div>
-                <div id="divFindProject" class="form-group">
+                <div id="divFindProject" class="form-group has-error">
                     <div class="col-xs-6">
                         <input type="text" id="textFindProject" class="form-control" placeholder="Project ID">
                     </div>
                     <div class="col-xs-6"> 
-                        <button id="btnFindProject" class="btn btn-primary btn-block">Find Project</button>
+                        <button id="btnFindProject" class="btn btn-primary btn-block" disabled>Find Project</button>
                     </div>               
                 </div>
                 <div id="divProjectData" class="">
