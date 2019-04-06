@@ -1,485 +1,417 @@
-var map;
-var layerOSM;
-var layerWatercolor;
-var layerTopo;
-var layerImagery;
-var layerOutdoors;
-var markerCurrentLocation;
-var markerClusterLayer;
-var ll;
-var popStadium;
-var controlZoom;
-var controlAttribute;
-var controlScale;
-var controlPan;
-var controlZoomSlider;
-var controlMousePosition;
-var controlPolylineMeasure;
-var controlEasyButton;
-var controlEasyButtonSidebar;
-var controlSidebar;
-var controlOpencageSearch;
-var controlLayer;
-var baseLayers;
-var overlayLayers;
-var polygonParks;
-var featureGroupMall;
-var featureGroupDrawnItems;
-var controlDraw;
-var controlStyle;
-var layerEagleNests;
-var layerRaptorNests;
-var layerClientLines;
-var layerBurrowingOwl;
-var layerGreatBlueHeron;
-var layerSearch;
-var arrayProjectIds = [];
-// var iconRedSprite;
-// var iconVioletSprite;
-// var iconLeafletAwesomeMarkerTree;
-// var iconLeafletAwesomeMarkerBird;
-// var iconMapKeyTree;
-// var iconMapKeyBird;
-// var iconEagleActive;
-// var iconEagleInactive;
-
-// iconRedSprite = L.spriteIcon('red');
-// iconVioletSprite = L.spriteIcon('violet');
-
-// iconLeafletAwesomeMarkerTree = L.AwesomeMarkers.icon({icon: 'tree-conifer', markerColor: 'green'});
-// iconLeafletAwesomeMarkerBird = L.AwesomeMarkers.icon({icon: 'twitter', markerColor: 'green', iconColor: 'red', spin: true,prefix: 'fa'});
-
-// iconMapKeyBird = L.icon.mapkey({icon:"school",color:'#725139',background:'#f2c357',size:30});
-// iconMapKeyTree = L.icon.mapkey({icon:"tree_cinofer",color:'#725139',background:'#f2c357',size:30, borderRadius: 5});
-
-// iconEagleActive = L.icon({iconUrl: 'nest.png', iconSize: [30, 30],
-// iconAnchor: [10, 20]});
-// iconEagleInactive = L.icon({iconUrl: 'nest2.png', iconSize: [30, 30],
-// iconAnchor: [10, 20]});
-
-// iconEagleActive = L.icon({iconUrl:'../img/nest2.png', iconSize:[40,40], iconAnchor:[20,24]});
-// iconEagleInactive = L.icon({iconUrl:'../img/nest.png', iconSize:[40,40], iconAnchor:[20,24]});
-
-
-
-
-
-
-
-// *************** Map Initialization *************/
-
-map = L.map('map', {center:[40.18, -104.83], zoom: 11, attributionControl: false});
-
-controlSidebar = L.control.sidebar('sidebar', {
-    position: 'left'
-});
-controlSidebar.addTo(map);
-
-controlEasyButtonSidebar = L.easyButton('glyphicon-transfer', function(){
-    controlSidebar.toggle();
-}).addTo(map);
-
-controlAttribute = L.control.attribution({position: "bottomleft"});
-controlAttribute.addAttribution("<a href='http://geocadder.bg/en'>geocadder</a>");
-controlAttribute.addTo(map);
-
-controlMousePosition = L.control.mousePosition();
-controlMousePosition.addTo(map);
-
-controlScale = L.control.scale({position:  "bottomleft", imperial: false});
-controlScale.addTo(map);
-
-controlStyle = L.control.styleEditor({position: 'topright'}).addTo(map);
-
-controlPolylineMeasure = L.control.polylineMeasure();
-controlPolylineMeasure.addTo(map);
-// ****************************************************
-
-
-
-
-// ************* Layer Initialization *************/
-
-// layerOSM = L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png');
-layerOSM = L.tileLayer.provider('OpenStreetMap.Mapnik');
-layerWatercolor = L.tileLayer.provider('Stamen.Watercolor');
-layerTopo = L.tileLayer.provider('OpenTopoMap');
-layerImagery = L.tileLayer.provider('Esri.WorldImagery');
-layerHydra = L.tileLayer.provider('Hydda.Full');
-map.addLayer(layerOSM);
-// *****************************************************
-
-
-featureGroupDrawnItems = L.featureGroup().addTo(map);
-
-// layerEagleNests = L.geoJSON.ajax('data/wildlife_eagle.geojson', {pointToLayer: returnEagleMarker, filter: filterEagleNests}).addTo(map);
-// layerEagleNests.on('data:loaded', function(){
-//     map.fitBounds(layerEagleNests.getBounds());
-// })
-
-layerEagleNests = L.geoJSON.ajax('data/wildlife_eagle.geojson', {pointToLayer: returnEagleMarker}).addTo(map);
-layerEagleNests.on('data:loaded', function(){
-    map.fitBounds(layerEagleNests.getBounds());
-})
-
-markerClusterLayer = L.markerClusterGroup({});
-
-// layerRaptorNests = L.geoJSON.ajax('data/wildlife_raptor.geojson', {pointToLayer: returnRaptorMarker});
-// layerRaptorNests.on('data:loaded', function(){
-//     layerRaptorNests.addTo(map);
-// })
-
-layerRaptorNests = L.geoJSON.ajax('data/wildlife_raptor.geojson', {pointToLayer: returnRaptorMarker});
-layerRaptorNests.on('data:loaded', function(){
-    markerClusterLayer.addLayer(layerRaptorNests);
-    markerClusterLayer.addTo(map);
-})
-
-layerClientLines = L.geoJSON.ajax('data/client_lines.geojson', {style: styleClientLinears, onEachFeature: processClientLinears}).addTo(map);
-layerClientLines.on('data:loaded', function(){
-    arrayProjectIds.sort(function(a, b){
-        return a-b;
-    });
-    $("#textFindProject").autocomplete({
-        source: arrayProjectIds
-    })
-});
-
-layerBurrowingOwl = L.geoJSON.ajax('data/wildlife_buowl.geojson', {style: styleBurrowingOwl, onEachFeature: processBurrowingOwl, filter: filterBurrowingOwl}).addTo(map);
-
-layerGreatBlueHeron = L.geoJSON.ajax('data/wildlife_gbh.geojson', {style: {color: 'fuchsia'}}).bindTooltip("GBH Nesting Area").addTo(map);
-
-// overlayLayers = {
-//     "Eagle Nests": layerEagleNests,
-//     "Raptor Nests": layerRaptorNests,
-//     "Drawn Layers Feature Group": featureGroupDrawnItems
-// };
-
-// *************** Setup Layer Control ****************
-
-baseLayers = {
-    "Open Street Maps": layerOSM,
-    "Watercolor": layerWatercolor,
-    "Topo Map": layerTopo,
-    "Imagery": layerImagery,
-    "Hydra": layerHydra
-};
-
-overlayLayers = {
-    "Client Linears": layerClientLines,
-    "Burrowing Owl": layerBurrowingOwl,
-    "Eagle Nests": layerEagleNests,
-    "Raptor Nests": markerClusterLayer,
-    "Great Blue Heron Rookeries": layerGreatBlueHeron,
-    "Drawn Layers Feature Group": featureGroupDrawnItems
-};
-
-controlLayer = L.control.layers(baseLayers,  overlayLayers).addTo(map);
-// ****************************************************
-
-
-// *********** Setup Draw Control *************
-
-controlDraw = new L.Control.Draw({
-    draw: {
-        circle:false
-    },
-    edit:{
-        featureGroup:featureGroupDrawnItems
-    }
-});
-controlDraw.addTo(map);
-
-map.on('draw:created', function(e){
-    console.log(e);
-    featureGroupDrawnItems.addLayer(e.layer);
-});
-// **********************************************
-
-
-
-// map.on('contextmenu', function(e){
-//     L.marker(e.latlng).addTo(map).bindPopup(e.latlng.toString());
-// })
-
-// map.on('keypress',function(e){
-//     if(e.originalEvent.key == "l"){
-//         map.locate();
-//     }
-// })
-
-
-
-// ********* Location Events **********
-
-map.on('locationfound', function(e){
-    console.log(e);
-    if(markerCurrentLocation){
-        markerCurrentLocation.remove();
-    }    
-    markerCurrentLocation = L.circle(e.latlng, {radius:e.accuracy/2}).addTo(map);
-    map.setView(e.latlng, 18);
-})
-
-map.on('locationerror', function(e){
-    console.log(e);
-    alert("Location  was not found");
-})
-// ***************************************
-
-
-
-
-
-
-// map.on('zoomend', function(){
-//     $("#zoom-level").html(map.getZoom());
-// })
-
-// map.on('moveend', function(){
-//     $("#map-center").html(LatLngToArrayString(map.getCenter()));    
-// })
-
-// map.on('mousemove', function(e){
-//     $("#mouse-location").html(LatLngToArrayString(e.latlng));
-// })
-
-
-
-
-
-// ************ jQuery Event Handlers ************
-
-$("#btnLocate").click(function(){
-    map.locate();
-})
-// ****************************************************
-
-
-
-// **************** Eagle Functions **************
-
-function returnEagleMarker(geoJsonPoint, latlng){
-    var attribute = geoJsonPoint.properties;
-    if(attribute.status == 'ACTIVE NEST'){
-        var colorNest = 'deeppink';
-    } else {
-        var colorNest = 'green';
-    }
-    return L.circle(latlng, {radius: 804, color:colorNest}).bindTooltip("<h4>Eagle Nest: " + attribute.nest_id + "<h4> Status: "  + attribute.status);
-}
-
-// function returnEagleMarker(geoJsonPoint, latlng){
-//     var attribute = geoJsonPoint.properties;
-//     if(attribute.status == 'ACTIVE NEST'){
-//         var iconEagle = iconRedSprite;
-//     } else {
-//         var iconEagle = iconVioletSprite;
-//     }
-//     return L.marker(latlng, {icon: iconEagle});
-// }
-
-// function returnEagleMarker(geoJsonPoint, latlng){
-//     var attribute = geoJsonPoint.properties;
-//     if(attribute.status == 'ACTIVE NEST'){
-//         var iconEagle = iconLeafletAwesomeMarkerBird;
-//     } else {
-//         var iconEagle = iconLeafletAwesomeMarkerTree;
-//     }
-//     return L.marker(latlng, {icon: iconEagle});
-// }
-
-// function returnEagleMarker(geoJsonPoint, latlng){
-//     var attribute = geoJsonPoint.properties;
-//     if(attribute.status == 'ACTIVE NEST'){
-//         var iconEagle = iconMapKeyBird;
-//     } else {
-//         var iconEagle = iconMapKeyTree;
-//     }
-//     return L.marker(latlng, {icon: iconEagle}).bindTooltip("<h4>Eagle Nest: " + attribute.nest_id + "<h4>");
-// }
-
-// function returnEagleMarker(geoJsonPoint, latlng){
-//     var attribute = geoJsonPoint.properties;
-//     if(attribute.status == 'ACTIVE NEST'){
-//         var iconEagle = iconEagleActive;
-//     } else {
-//         var iconEagle = iconEagleInactive;
-//     }
-//     return L.marker(latlng, {icon: iconEagle}).bindTooltip("<h4>Eagle Nest: " + attribute.nest_id + "<h4>");
-// }
-// *************************************************************
-
-
-
-
-
-// ************ Raptor Functions *************
-
-function returnRaptorMarker(geoJsonPoint, latlng){
-    var attribute = geoJsonPoint.properties;
-    switch(attribute.recentspecies){
-        case 'Red-tail Hawk':
-            var radiusRaptor = 533;
-            break;
-        case 'Swainsons Hawk': 
-            var radiusRaptor = 400;
-            break;
-        default: 
-            var radiusRaptor = 804;
-            break;
-    }
-    switch(attribute.recentstatus){
-        case 'ACTIVE NEST':
-            var optionRaptor = {radius: radiusRaptor, color:'deeppink', fillColor: 'blue', fillOpacity: 0.5};
-            break;
-        case 'INACTIVE NEST':
-            var optionRaptor = {radius: radiusRaptor, color:'blue', fillColor: 'blue', fillOpacity: 0.5};
-            break;
-        case 'FLEDGED NEST':
-            var optionRaptor = {radius: radiusRaptor, color:'deeppink', fillColor: 'blue', fillOpacity: 0.5, dashArray: "2,8"};
-            break;
-    }
-    return L.circle(latlng, optionRaptor).bindPopup("<h4>Raptor Nest: " + attribute.Nest_ID + "<h4> Status: "  + attribute.recentstatus + "<br>Species:  " + attribute.recentspecies + "<br>Last Survey: " + attribute.lastsurvey);
-}
-
-// function returnRaptorMarker(geoJsonPoint, latlng){
-//     var attribute = geoJsonPoint.properties;
-    // if(attribute.status == 'ACTIVE NEST'){
-    //     var colorNest = 'deeppink';
-    // } else {
-    //     var colorNest = 'lightgreen';
-    // }
-    // return L.circleMarker(latlng, {radius: 10, color:colorNest, fillColor: 'green', fillOpacity: 0.5}).bindTooltip("<h4>Eagle Nest: " + attribute.nest_id + "<h4> Status: "  + attribute.status);
-// }
-
-// function filterEagleNests (geoJsonFeature){
-//     var attribute = geoJsonFeature.properties;
-//     if(attribute.status == 'ACTIVE NEST'){
-//         return true;
-//     } else {
-//         return false;
-//     }
-// }
-// ******************************************************
-
-
-// ************* Client Linears Functions ***************
-function styleClientLinears(geoJsonFeature){
-    var attribute = geoJsonFeature.properties;
-    switch(attribute.type){
-        case 'Pipeline': 
-            return {color: 'peru'};
-            break;
-        case 'Flowline': 
-            return {color: 'navy'};
-            break;
-        case 'Flowline, est.': 
-            return {color: 'navy', dashArray: "5,5"};
-            break;
-        case 'Electric Line': 
-            return {color: 'darkgreen'};
-            break;
-        case 'Access Road - Confirmed': 
-            return {color: 'darkred'};
-            break;
-        case 'Access Road - Estimated': 
-            return {color: 'darkred', dashArray: "5,5"};
-            break;
-        case 'Extraction': 
-            return {color: 'indigo'};
-            break;
-        default:
-            return {color: 'darkgoldenred'};
-            break;
-    }
-}
-
-function processClientLinears (feature, layer){
-    var attribute = feature.properties;
-    layer.bindTooltip("<h4>Linear Project: " + attribute.Project + "</h4></h4>Type: " + attribute.type + "</h4><br>Row width: " + attribute.row_width);
-    arrayProjectIds.push(attribute.Project.toString());
-}
-
-function returnClientLinearById (id){
-    var layersArray= layerClientLines.getLayers();
-    for  (i=0; i<layersArray.length - 1; i++){
-        var featureId = layersArray[i].feature.properties.Project;
-        if (featureId == id){
-            return layersArray[i];
-        }
-    }
-    return false;
-}
-
-function testClientLineId(id){
-    if(arrayProjectIds.indexOf(id) < 0){
-        $("#divFindProject").addClass("has-error");
-        $("#divProjectError").html("*** PROJECT NOT FOUND ***");
-        $("#btnFindProject").attr("disabled", true);
-    } else {
-        $("#divFindProject").removeClass("has-error");
-        $("#divProjectError").html("");
-        $("#btnFindProject").attr("disabled", false);
-    }
-}
-
-$("#textFindProject").on('keyup paste', function(){
-    var id = $("#textFindProject").val();
-    testClientLineId(id);
-
-})
-
-$("#btnFindProject").click(function(){
-    var id = $("#textFindProject").val();
-    var layer = returnClientLinearById(id);
-    if(layer){
-        if(layerSearch){
-            layerSearch.remove();
-        }
-        layerSearch = L.geoJSON(layer.toGeoJSON(), {style: {color: 'red', weight: 10, opacity: 0.5}}).addTo(map);
-        map.fitBounds(layer.getBounds().pad(1));
-        var attribute = layer.feature.properties;
-        $("#divProjectData").html("<h4 class='text-center'>Attributes</h4> <h5>Type: " + attribute.type + "</h5><h5>Row width: " + attribute.row_width + "m </h5>");
-    } else {
-        $("#divProjectError").html("*** Project ID not found ***");
-    }
-})
-// **********************************************************
-
-
-
-// ************** Burrowing Owl Functions *************
-
-function styleBurrowingOwl(geoJsonFeature){
-    var attribute = geoJsonFeature.properties;
-    switch(attribute.hist_occup){
-        case 'Yes': 
-            return {color: 'deeppink', fillColor: 'yellow'};
-            break;
-        case 'Undetermined': 
-            return {color: 'yellow'};
-            break;
-    }
-}
-
-function processBurrowingOwl (feature, layer){
-    var attribute = feature.properties;
-    layer.bindTooltip("<h4>Habitat ID: " + attribute.habitat_id + "</h4></h4>Historically Occupied: " + attribute.hist_occup + "</h4><br>Status: " + attribute.recentstatus);
-}
-
-function filterBurrowingOwl (geoJsonFeature){
-    var attribute = geoJsonFeature.properties;
-    if(attribute.recentstatus == 'REMOVED'){
-        return false;
-    } else {
-        return true;
-    }
-}
-
-
-
-// ************ General Functions *******************
-function LatLngToArrayString(ll){
-    return "[" + ll.lat.toFixed(5) + ", "  + ll.lng.toFixed(5) + "]";
-}
+var mymap;
+            var lyrOSM;
+            var lyrWatercolor;
+            var lyrTopo;
+            var lyrImagery;
+            var lyrOutdoors;
+            var lyrEagleNests;
+            var lyrRaptorNests;
+            var lyrClientLines;
+            var lyrBUOWL;
+            var lyrGBH;
+            var lyrSearch;
+            var lyrMarkerCluster;
+            var mrkCurrentLocation;
+            var fgpDrawnItems;
+            var ctlAttribute;
+            var ctlScale;
+            var ctlMouseposition;
+            var ctlMeasure;
+            var ctlEasybutton;
+            var ctlSidebar;
+            var ctlLayers;
+            var ctlDraw;
+            var ctlStyle;
+            var objBasemaps;
+            var objOverlays;
+            var arProjectIDs = [];
+            var arHabitatIDs = [];
+            var arEagleIDs = [];
+            var arRaptorIDs = [];
+            
+            $(document).ready(function(){
+                
+                //  ********* Map Initialization ****************
+                
+                mymap = L.map('mapdiv', {center:[40.18, -104.83], zoom:11, attributionControl:false});
+                
+                ctlSidebar = L.control.sidebar('side-bar').addTo(mymap);
+                
+                ctlEasybutton = L.easyButton('glyphicon-transfer', function(){
+                   ctlSidebar.toggle(); 
+                }).addTo(mymap);
+                
+                ctlAttribute = L.control.attribution().addTo(mymap);
+                ctlAttribute.addAttribution('OSM');
+                ctlAttribute.addAttribution('&copy; <a href="http://millermountain.com">Miller Mountain LLC</a>');
+                
+                ctlScale = L.control.scale({position:'bottomleft', metric:false, maxWidth:200}).addTo(mymap);
+
+                ctlMouseposition = L.control.mousePosition().addTo(mymap);
+                
+                ctlStyle = L.control.styleEditor({position:'topright'}).addTo(mymap);
+                ctlMeasure = L.control.polylineMeasure().addTo(mymap);
+                
+                //   *********** Layer Initialization **********
+                
+                lyrOSM = L.tileLayer.provider('OpenStreetMap.Mapnik');
+                lyrTopo = L.tileLayer.provider('OpenTopoMap');
+                lyrImagery = L.tileLayer.provider('Esri.WorldImagery');
+                lyrOutdoors = L.tileLayer.provider('Thunderforest.Outdoors');
+                lyrWatercolor = L.tileLayer.provider('Stamen.Watercolor');
+                mymap.addLayer(lyrOSM);
+                
+                fgpDrawnItems = new L.FeatureGroup();
+                fgpDrawnItems.addTo(mymap);
+                
+                lyrEagleNests = L.geoJSON.ajax('data/wildlife_eagle.geojson', {pointToLayer:returnEagleMarker}).addTo(mymap);
+                lyrEagleNests.on('data:loaded', function(){
+                    arEagleIDs.sort(function(a,b){return a-b});
+                    $("#txtFindEagle").autocomplete({
+                        source:arEagleIDs
+                    });
+                });
+                
+                lyrMarkerCluster = L.markerClusterGroup();
+                lyrRaptorNests = L.geoJSON.ajax('data/wildlife_raptor.geojson', {pointToLayer:returnRaptorMarker});
+                lyrRaptorNests.on('data:loaded', function(){
+                    arRaptorIDs.sort(function(a,b){return a-b});
+                    $("#txtFindRaptor").autocomplete({
+                        source:arRaptorIDs
+                    });
+                    lyrMarkerCluster.addLayer(lyrRaptorNests);
+                    lyrMarkerCluster.addTo(mymap);
+                });
+                
+                lyrClientLines = L.geoJSON.ajax('data/client_lines.geojson', {style:styleClientLinears, onEachFeature:processClientLinears}).addTo(mymap);
+                lyrClientLines.on('data:loaded', function(){
+                    arProjectIDs.sort(function(a,b){return a-b});
+                    $("#txtFindProject").autocomplete({
+                        source:arProjectIDs
+                    });
+                });
+                
+                lyrBUOWL = L.geoJSON.ajax('data/wildlife_buowl.geojson', {style:styleBUOWL, onEachFeature:processBUOWL, filter:filterBUOWL}).addTo(mymap);
+                lyrBUOWL.on('data:loaded', function(){
+                    arHabitatIDs.sort(function(a,b){return a-b});
+                    $("#txtFindBUOWL").autocomplete({
+                        source:arHabitatIDs
+                    });
+                });
+                
+                lyrGBH = L.geoJSON.ajax('data/wildlife_gbh.geojson', {style:{color:'fuchsia'}}).bindTooltip("GBH Nesting Area").addTo(mymap);
+                
+                // ********* Setup Layer Control  ***************
+                
+                objBasemaps = {
+                    "Open Street Maps": lyrOSM,
+                    "Topo Map":lyrTopo,
+                    "Imagery":lyrImagery,
+                    "Outdoors":lyrOutdoors,
+                    "Watercolor":lyrWatercolor
+                };
+                
+                objOverlays = {
+                    "Client Linears":lyrClientLines,
+                    "Burrowing Owl Habitat":lyrBUOWL,
+                    "Eagle Nest":lyrEagleNests,
+                    "Raptor Nest":lyrMarkerCluster,
+                    "GBH Rookeries":lyrGBH,
+                    "Drawn Items":fgpDrawnItems
+                };
+                
+                ctlLayers = L.control.layers(objBasemaps, objOverlays).addTo(mymap);
+                
+                // **********  Setup Draw Control ****************
+                
+                ctlDraw = new L.Control.Draw({
+                    draw:{
+                        circle:false,
+                        rectangle:false,
+                    },
+                    edit:{
+                        featureGroup:fgpDrawnItems
+                    }
+                });
+                ctlDraw.addTo(mymap);
+                
+                mymap.on('draw:created', function(e){
+                    fgpDrawnItems.addLayer(e.layer);
+                });
+                
+                // ************ Location Events **************
+                
+                mymap.on('locationfound', function(e) {
+                    console.log(e);
+                    if (mrkCurrentLocation) {
+                        mrkCurrentLocation.remove();
+                    }
+                    mrkCurrentLocation = L.circle(e.latlng, {radius:e.accuracy/2}).addTo(mymap);
+                    mymap.setView(e.latlng, 14);
+                });
+                
+                mymap.on('locationerror', function(e) {
+                    console.log(e);
+                    alert("Location was not found");
+                })
+                
+            });
+
+            //  ********* BUOWL Functions
+
+            function styleBUOWL(json){
+                var att = json.properties;
+                switch (att.hist_occup){
+                    case 'Yes':
+                        return {color:'deeppink', fillColor:'yellow'};
+                        break;
+                    case 'Undetermined':
+                        return {color:'yellow'};
+                        break;
+                }
+            }
+            
+            function processBUOWL(json, lyr){
+                var att = json.properties;
+                lyr.bindTooltip("<h4>Habitat ID: "+att.habitat_id+"</h4>Historically Occupied: "+att.hist_occup+"<br>Status: "+att.recentstatus);
+                arHabitatIDs.push(att.habitat_id.toString())
+            }
+            
+            function filterBUOWL(json){
+                var att = json.properties;
+                if (att.recentstatus=='REMOVED') {
+                    return false;
+                } else {
+                    return true;
+                }
+            }
+            
+            $("#txtFindBUOWL").on('keyup paste', function(){
+                var val = $("#txtFindBUOWL").val();
+                testLayerAttribute(arHabitatIDs, val, "Habitat ID", "#divFindBUOWL", "#divBUOWLError", "#btnFindBUOWL");
+            });
+            
+            $("#btnFindBUOWL").click(function(){
+                var val = $("#txtFindBUOWL").val();
+                var lyr = returnLayerByAttribute(lyrBUOWL,'habitat_id',val);
+                if (lyr) {
+                    if (lyrSearch) {
+                        lyrSearch.remove();
+                    }
+                    lyrSearch = L.geoJSON(lyr.toGeoJSON(), {style:{color:'red', weight:10, opacity:0.5, fillOpacity:0}}).addTo(mymap);
+                    mymap.fitBounds(lyr.getBounds().pad(1));
+                    var att = lyr.feature.properties;
+                    $("#divBUOWLData").html("<h4 class='text-center'>Attributes</h4><h5>Habitat: "+att.habitat+"</h5><h5>Historically Occupied: "+att.hist_occup+"</h5><h5>Recent Status: "+att.recentstatus+"</h5>");
+                    $("#divBUOWLError").html("");
+                } else {
+                    $("#divBUOWLError").html("**** Habitat ID not found ****");
+                }
+            });
+            
+            $("#lblBUOWL").click(function(){
+                $("#divBUOWLData").toggle(); 
+            });
+            
+            // ************ Client Linears **********
+            
+            function styleClientLinears(json) {
+                var att = json.properties;
+                switch (att.type) {
+                    case 'Pipeline':
+                        return {color:'peru'};
+                        break;
+                    case 'Flowline':
+                        return {color:'navy'};
+                        break;
+                    case 'Flowline, est.':
+                        return {color:'navy', dashArray:"5,5"};
+                        break;
+                    case 'Electric Line':
+                        return {color:'darkgreen'};
+                        break;
+                    case 'Access Road - Confirmed':
+                        return {color:'darkred'};
+                        break;
+                    case 'Access Road - Estimated':
+                        return {color:'darkred', dashArray:"5,5"};
+                        break;
+                    case 'Extraction':
+                        return {color:'indigo'};
+                        break;
+                    default:
+                        return {color:'darkgoldenrod'}
+                }
+            }
+            
+            function processClientLinears(json, lyr) {
+                var att = json.properties;
+                lyr.bindTooltip("<h4>Linear Project: "+att.Project+"</h4>Type: "+att.type+"<br>ROW Width: "+att.row_width);
+                arProjectIDs.push(att.Project.toString());
+            }
+            
+            $("#txtFindProject").on('keyup paste', function(){
+                var val = $("#txtFindProject").val();
+                testLayerAttribute(arProjectIDs, val, "PROJECT ID", "#divFindProject", "#divProjectError", "#btnFindProject");
+            });
+            
+            $("#btnFindProject").click(function(){
+                var val = $("#txtFindProject").val();
+                var lyr = returnLayerByAttribute(lyrClientLines,'Project',val);
+                if (lyr) {
+                    if (lyrSearch) {
+                        lyrSearch.remove();
+                    }
+                    lyrSearch = L.geoJSON(lyr.toGeoJSON(), {style:{color:'red', weight:10, opacity:0.5}}).addTo(mymap);
+                    mymap.fitBounds(lyr.getBounds().pad(1));
+                    var att = lyr.feature.properties;
+                    $("#divProjectData").html("<h4 class='text-center'>Attributes</h4><h5>Type: "+att.type+"</h5><h5>ROW width: "+att.row_width+ "m </h5>");
+                    $("#divProjectError").html("");
+                } else {
+                    $("#divProjectError").html("**** Project ID not found ****");
+                }
+            });
+            
+            $("#lblProject").click(function(){
+                $("#divProjectData").toggle(); 
+            });
+            
+            // *********  Eagle Functions *****************
+            
+            function returnEagleMarker(json, latlng){
+                var att = json.properties;
+                if (att.status=='ACTIVE NEST') {
+                    var clrNest = 'deeppink';
+                } else {
+                    var clrNest = 'chartreuse';
+                }
+                arEagleIDs.push(att.nest_id.toString());
+                return L.circle(latlng, {radius:804, color:clrNest,fillColor:'chartreuse', fillOpacity:0.5}).bindTooltip("<h4>Eagle Nest: "+att.nest_id+"</h4>Status: "+att.status);
+            }
+            
+            $("#txtFindEagle").on('keyup paste', function(){
+                var val = $("#txtFindEagle").val();
+                testLayerAttribute(arEagleIDs, val, "Eagle Nest ID", "#divFindEagle", "#divEagleError", "#btnFindEagle");
+            });
+            
+            $("#btnFindEagle").click(function(){
+                var val = $("#txtFindEagle").val();
+                var lyr = returnLayerByAttribute(lyrEagleNests,'nest_id',val);
+                if (lyr) {
+                    if (lyrSearch) {
+                        lyrSearch.remove();
+                    }
+                    lyrSearch = L.circle(lyr.getLatLng(), {radius:800, color:'red', weight:10, opacity:0.5, fillOpacity:0}).addTo(mymap);
+                    mymap.setView(lyr.getLatLng(), 14);
+                    var att = lyr.feature.properties;
+                    $("#divEagleData").html("<h4 class='text-center'>Attributes</h4><h5>Status: "+att.status+"</h5>");
+                    $("#divEagleError").html("");
+                } else {
+                    $("#divEagleError").html("**** Eagle Nest ID not found ****");
+                }
+            });
+            
+            $("#lblEagle").click(function(){
+                $("#divEagleData").toggle(); 
+            });
+            
+            //  *********** Raptor Functions
+            
+            function returnRaptorMarker(json, latlng){
+                var att = json.properties;
+                arRaptorIDs.push(att.Nest_ID.toString());
+                switch (att.recentspecies) {
+                    case 'Red-tail Hawk':
+                        var radRaptor = 533;
+                        break;
+                    case 'Swainsons Hawk':
+                        var radRaptor = 400;
+                        break;
+                    default:
+                        var radRaptor = 804;
+                        break;
+                }
+                switch (att.recentstatus) {
+                    case 'ACTIVE NEST':
+                        var optRaptor = {radius:radRaptor, color:'deeppink', fillColor:"cyan", fillOpacity:0.5};
+                        break;
+                    case 'INACTIVE NEST':
+                        var optRaptor = {radius:radRaptor, color:'cyan', fillColor:'cyan', fillOpacity:0.5};
+                        break;
+                    case 'FLEDGED NEST':
+                        var optRaptor = {radius:radRaptor, color:'deeppink', fillColor:"cyan", fillOpacity:0.5, dashArray:"2,8"};
+                        break;
+                }
+                return L.circle(latlng, optRaptor).bindPopup("<h4>Raptor Nest: "+att.Nest_ID+"</h4>Status: "+att.recentstatus+"<br>Species: "+att.recentspecies+"<br>Last Survey: "+att.lastsurvey);
+            }
+                
+            $("#txtFindRaptor").on('keyup paste', function(){
+                var val = $("#txtFindRaptor").val();
+                testLayerAttribute(arRaptorIDs, val, "Raptor Nest ID", "#divFindRaptor", "#divRaptorError", "#btnFindRaptor");
+            });
+            
+            $("#btnFindRaptor").click(function(){
+                var val = $("#txtFindRaptor").val();
+                var lyr = returnLayerByAttribute(lyrRaptorNests,'Nest_ID',val);
+                if (lyr) {
+                    if (lyrSearch) {
+                        lyrSearch.remove();
+                    }
+                    var att = lyr.feature.properties;
+                    switch (att.recentspecies) {
+                        case 'Red-tail Hawk':
+                            var radRaptor = 533;
+                            break;
+                        case 'Swainsons Hawk':
+                            var radRaptor = 400;
+                            break;
+                        default:
+                            var radRaptor = 804;
+                            break;
+                    }
+                    lyrSearch = L.circle(lyr.getLatLng(), {radius:radRaptor, color:'red', weight:10, opacity:0.5, fillOpacity:0}).addTo(mymap);
+                    mymap.setView(lyr.getLatLng(), 14);
+                    $("#divRaptorData").html("<h4 class='text-center'>Attributes</h4><h5>Status: "+att.recentstatus+"</h5><h5>Species: "+att.recentspecies+"</h5><h5>Last Survey: "+att.lastsurvey+"</h5>");
+                    $("#divRaptorError").html("");
+                } else {
+                    $("#divRaptorError").html("**** Raptor Nest ID not found ****");
+                }
+            });
+            
+            $("#lblRaptor").click(function(){
+                $("#divRaptorData").toggle(); 
+            });
+            
+            //  *********  jQuery Event Handlers  ************
+            
+            $("#btnLocate").click(function(){
+                mymap.locate();
+            });
+            
+            //  ***********  General Functions *********
+            
+            function LatLngToArrayString(ll) {
+                return "["+ll.lat.toFixed(5)+", "+ll.lng.toFixed(5)+"]";
+            }
+            
+            function returnLayerByAttribute(lyr,att,val) {
+                var arLayers = lyr.getLayers();
+                for (i=0;i<arLayers.length-1;i++) {
+                    var ftrVal = arLayers[i].feature.properties[att];
+                    if (ftrVal==val) {
+                        return arLayers[i];
+                    }
+                }
+                return false;
+            }
+            
+            function testLayerAttribute(ar, val, att, fg, err, btn) {
+                if (ar.indexOf(val)<0) {
+                    $(fg).addClass("has-error");
+                    $(err).html("**** "+att+" NOT FOUND ****");
+                    $(btn).attr("disabled", true);
+                } else {
+                    $(fg).removeClass("has-error");
+                    $(err).html("");
+                    $(btn).attr("disabled", false);
+                }
+            }
