@@ -43,7 +43,7 @@ var mymap;
                 
                 ctlAttribute = L.control.attribution().addTo(mymap);
                 ctlAttribute.addAttribution('OSM');
-                ctlAttribute.addAttribution('&copy; <a href="http://millermountain.com">Miller Mountain LLC</a>');
+                ctlAttribute.addAttribution('&copy; <a href="http://geocadder.bg">geocadder</a>');
                 
                 ctlScale = L.control.scale({position:'bottomleft', metric:false, maxWidth:200}).addTo(mymap);
 
